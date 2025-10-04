@@ -1,13 +1,14 @@
 # importando as biblitecas
 import pandas as pd
-from sklearn import pipeline
+from sklearn import tree
+from sklearn.tree import DecisionTreeClassifier
 from feature_engine.encoding import OneHotEncoder
 
-# carregandos os dados
+# Carregandos os dados
 df = pd.read_csv("../data/Application_Data.csv")
 
 
-features = ["Applicant_Gender",  "Income_Type","Education_Type","Family_Status", "Housing_Type", "Total_Income"]
+features = ['Income_Type', 'Family_Status', 'Housing_Type', 'Job_Title', 'Total_Income', 'Total_Bad_Debt', 'Total_Good_Debt']
 
 
 # Separar as variaveis categoricas
@@ -18,23 +19,21 @@ def var_categoricas():
         if df.dtypes[i] == 'object' or df.dtypes[i] == 'category':
             list_var_categoricas.append(i)
 
-
+# Chamando a funcao
 var_categoricas()
 
-#onehor da lib features engine
+#Onehot da lib features engine
 onehot = OneHotEncoder(variables = list_var_categoricas)
 onehot.fit(df[features])
 
-
-# transformando o dado original
+# Transformando o dado original
 df_fit = onehot.transform(df[features])
 
-# treinando o modelo de machine learning
+# Treinando o modelo de machine learning
 target = "status"
 
 clf_tree = tree.DecisionTreeClassifier()
 clf_tree.fit(df_fit, df[target])
-
 
 # Salvando o algoritmo
 model = pd.Series(

@@ -1,6 +1,5 @@
 # Importando as biblitecas
 import pandas as pd
-
 from imblearn.over_sampling import SMOTE
 from sklearn import tree
 from sklearn.tree import DecisionTreeClassifier
@@ -9,11 +8,22 @@ from feature_engine.encoding import OneHotEncoder
 # Carregandos os dados
 df = pd.read_csv("../data/Application_Data.csv")
 
-# Separar as variaves para o modelo
-#y = df["Status"]
-#X = df.drop('Status', axis=1)
 
-features = ['Income_Type', 'Family_Status', 'Housing_Type', 'Job_Title', 'Total_Income', 'Total_Bad_Debt', 'Total_Good_Debt']
+features = [
+    "Applicant_Gender",
+    "Income_Type",
+    "Total_Income" ,
+    "Total_Bad_Debt",
+    "Total_Good_Debt",
+    "Education_Type",
+    "Family_Status",
+    "Job_Title",
+    "Housing_Type"  ]
+
+
+# Renomeando a coluna de Status
+df['Status'].replace( {0: "Credit not approved", 1: "Credit approved"}, inplace = True)
+
 
 # Separar as variaveis categoricas
 list_var_categoricas = []
@@ -23,15 +33,18 @@ def var_categoricas():
         if df.dtypes[i] == 'object' or df.dtypes[i] == 'category':
             list_var_categoricas.append(i)
 
-# Chamando a funcao
+# Chamando a funcao categorica
 var_categoricas()
 
-#Onehot da lib features engine
+# Eliminar a variavel categorica Status
+del list_var_categoricas[-1]
+
+# Onehot da lib features engine
 onehot = OneHotEncoder(variables = list_var_categoricas)
-onehot.fit(df)
+onehot.fit(df('Status', axis=1)[features])
 
 # Transformando o dado original
-df_fit = onehot.transform(df)
+df_fit = onehot.transform(df('Status', axis=1)[features])
 
 
 # Seed para reproduzir o mesmo resultado
@@ -40,13 +53,12 @@ seed = 100
 balanceador = SMOTE(random_state = seed)
 
 # Aplicar o balanceador
-X_bal, y_bal = balanceador.fit_resample(df_fit.drop('Status', axis=1), df_fit["Status"])
+X_bal, y_bal = balanceador.fit_resample(df_fit, df["Status"])
 
 # Treinando o modelo de machine learning
-target = "Status"
 
 clf_tree = tree.DecisionTreeClassifier()
-clf_tree.fit(df_fit, df[target])
+clf_tree.fit(X_bal, y_bal)
 
 # Salvando o algoritmo
 model = pd.Series(
@@ -54,9 +66,10 @@ model = pd.Series(
         "model": clf_tree,
         "onehot": onehot,
         "features": features,
-        "tanget": target
+        "target": y_bal
     }
 )
+
 model.to_pickle("../models/aprov_credito_tree_onehot.pkl")
 
 model

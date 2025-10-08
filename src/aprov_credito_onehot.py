@@ -2,6 +2,7 @@
 import pandas as pd
 from imblearn.over_sampling import SMOTE
 from sklearn import tree
+from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from feature_engine.encoding import OneHotEncoder
 
@@ -21,10 +22,6 @@ features = [
     "Housing_Type"  ]
 
 
-# Renomeando a coluna de Status
-df['Status'].replace( {0: "Credit not approved", 1: "Credit approved"}, inplace = True)
-
-
 # Separar as variaveis categoricas
 list_var_categoricas = []
 def var_categoricas():
@@ -36,15 +33,13 @@ def var_categoricas():
 # Chamando a funcao categorica
 var_categoricas()
 
-# Eliminar a variavel categorica Status
-del list_var_categoricas[-1]
 
 # Onehot da lib features engine
 onehot = OneHotEncoder(variables = list_var_categoricas)
-onehot.fit(df('Status', axis=1)[features])
+onehot.fit(df.drop('Status', axis=1)[features])
 
 # Transformando o dado original
-df_fit = onehot.transform(df('Status', axis=1)[features])
+df_fit = onehot.transform(df.drop('Status', axis=1)[features])
 
 
 # Seed para reproduzir o mesmo resultado
@@ -55,10 +50,13 @@ balanceador = SMOTE(random_state = seed)
 # Aplicar o balanceador
 X_bal, y_bal = balanceador.fit_resample(df_fit, df["Status"])
 
+# Divisão das variaveis de Treino e Teste.
+X_train, X_test, y_train, y_test = train_test_split(X_bal, y_bal, test_size = 0.3, random_state = 42)
+
 # Treinando o modelo de machine learning
 
-clf_tree = tree.DecisionTreeClassifier()
-clf_tree.fit(X_bal, y_bal)
+clf_tree = tree.DecisionTreeClassifier(max_depth=5, random_state = 42)
+clf_tree.fit(X_train, y_train)
 
 # Salvando o algoritmo
 model = pd.Series(
@@ -66,7 +64,10 @@ model = pd.Series(
         "model": clf_tree,
         "onehot": onehot,
         "features": features,
-        "target": y_bal
+        "X_train": X_train,
+        "X_test": X_test,
+        "y_train": y_train,
+        "target": y_test
     }
 )
 

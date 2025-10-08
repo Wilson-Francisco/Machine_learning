@@ -1,7 +1,10 @@
 import pandas as pd
+from sklearn import metrics
 from sklearn import tree
 from sklearn.tree import DecisionTreeClassifier
 from feature_engine.encoding import OneHotEncoder
+
+from src.aprov_credito_onehot import y_train
 
 # Carregandos os dados
 df = pd.read_csv("../data/Application_Data.csv")
@@ -43,9 +46,24 @@ data = pd.DataFrame(
         "Housing_Type": [Housing_Type]
     } )
 
+# As metricas do modelo
+prev_train = model['model'].predict(model['X_train'])
+accur_train = metrics.accuracy_score(model['y_train'], prev_train)
+
+prev_test = model['model'].predict(model['X_test'])
+accur_test = metrics.accuracy_score(model['target'], prev_test)
+
+
+matric_conf = metrics.confusion_matrix(model['target'], prev_test)
+matric_conf = pd.DataFrame(matric_conf, index=['False', 'True'], columns=['False', 'True'])
+print(matric_conf, '\n')
+
+
+print(f'accur_train: {accur_train}')
+print(f'accur_test: {accur_test}', '\n')
+
 # Fazendo as predição dos inputs do usuario
 df_full = model['onehot'].transform(data)
 pred = model["model"].predict(df_full)[0]
 
 print(f'O seu credito foi: {pred}')
-#proba = model["model"].predict_proba(df_final(model['features']))

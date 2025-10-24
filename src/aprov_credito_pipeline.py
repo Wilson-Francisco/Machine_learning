@@ -2,6 +2,7 @@
 import pandas as pd
 from sklearn import pipeline
 from sklearn import tree
+from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
 from sklearn.preprocessing import MinMaxScaler
@@ -73,3 +74,18 @@ model.to_pickle("../models/aprov_credito_tree_pipeline.pkl")
 model
 
 print(model_pipeline)
+
+# Métricas do modelo
+
+scores_train = model["model"].score(model["X_train"], model["y_train"])
+scores_test = model["model"].score(model["X_test"], model["target"])
+
+pred_proba_train = model["model"].predict_proba(model["X_train"])[:,1]
+pred_proba_test = model["model"].predict_proba(model["X_test"])[:,1]
+scores_roc_auc_train = metrics.roc_auc_score(model["y_train"], pred_proba_train)
+scores_roc_auc_test = metrics.roc_auc_score(model["target"], pred_proba_test)
+
+print(f"Acuracia do treino:{scores_train}")
+print(f"Acuracia do test:{scores_test}")
+print(f"Curva ROC do treino:{scores_roc_auc_train}")
+print(f"Curva ROC do test:{scores_roc_auc_test}")
